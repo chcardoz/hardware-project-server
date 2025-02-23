@@ -1,11 +1,16 @@
+import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-import os
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost/postgres")
+# Get DATABASE_URL from environment variables
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set. Make sure Railway has provisioned a PostgreSQL instance.")
+
+# Create database engine
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -17,6 +22,7 @@ class Message(Base):
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String, index=True)
 
+# Ensure database tables are created
 Base.metadata.create_all(bind=engine)
 
 class MessageCreate(BaseModel):
